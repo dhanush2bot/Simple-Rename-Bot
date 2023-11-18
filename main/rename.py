@@ -1,5 +1,6 @@
-import time, os
-from pyrogram import Client, filters, enums
+import time
+import os
+from pyrogram import Client, filters
 from config import DOWNLOAD_LOCATION, CAPTION, ADMIN
 from main.utils import progress_message, humanbytes
 
@@ -7,16 +8,17 @@ from main.utils import progress_message, humanbytes
 async def rename_file(bot, msg):
     reply = msg.reply_to_message
     if len(msg.command) < 2 or not reply:
-       return await msg.reply_text("Please Reply To An File or video or audio With filename + .extension eg:-(`.mkv` or `.mp4` or `.zip`)")
+        return await msg.reply_text("Please Reply To A File or video or audio with a filename + .extension, e.g., (`.mkv` or `.mp4` or `.zip`)")
     media = reply.document or reply.audio or reply.video
     if not media:
-       await msg.reply_text("Please Reply To An File or video or audio With filename + .extension eg:-(`.mkv` or `.mp4` or `.zip`)")
+        await msg.reply_text("Please Reply To A File or video or audio with a filename + .extension, e.g., (`.mkv` or `.mp4` or `.zip`)")
     og_media = getattr(reply, reply.media.value)
     new_name = msg.text.split(" ", 1)[1]
     sts = await msg.reply_text("Trying to Downloading.....")
     c_time = time.time()
     downloaded = await reply.download(file_name=new_name, progress=progress_message, progress_args=("Download Started.....", sts, c_time)) 
     filesize = humanbytes(og_media.file_size)                
+    
     if CAPTION:
         try:
             cap = CAPTION.format(file_name=new_name, file_size=filesize)
@@ -24,8 +26,6 @@ async def rename_file(bot, msg):
             return await sts.edit(text=f"Your caption Error unexpected keyword ●> ({e})")           
     else:
         cap = f"{new_name}\n\n💽 size : {filesize}"
-
-    # this idea's back end is MKN brain 🧠
 
     dir = os.listdir(DOWNLOAD_LOCATION)
     if len(dir) == 0:
@@ -41,7 +41,7 @@ async def rename_file(bot, msg):
     await sts.edit("Trying to Uploading")
     c_time = time.time()
     try:
-        await bot.send_document(msg.chat.id, document=downloaded, thumb=og_thumbnail, caption=cap, progress=progress_message, progress_args=("Uploade Started.....", sts, c_time))        
+        await bot.send_document(msg.chat.id, document=downloaded, thumb=og_thumbnail, caption=cap, progress=progress_message, progress_args=("Upload Started.....", sts, c_time))        
     except Exception as e:  
         return await sts.edit(f"Error {e}")                       
     try:
@@ -50,9 +50,9 @@ async def rename_file(bot, msg):
         os.remove(downloaded)      
     except:
         pass
+    
+    # Adding the code to reply with the filename and a copy button
+    file_path = f"{DOWNLOAD_LOCATION}/{new_name}"
+    copy_text = f"**File Name:** `{new_name}`\n\n**File Size:** {filesize}\n\n**[Copy File Path]({file_path})**"
+    await msg.reply_text(copy_text, disable_web_page_preview=True)
     await sts.delete()
-
-
-
-
-
